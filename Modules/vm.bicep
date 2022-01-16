@@ -9,9 +9,12 @@ param vmSize string = 'Standard_A2_v2'
 param password string
 var adminName = '${vmName}-Admin'
 
+param tags object = {}
+
 resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   name: nicName
   location: location
+  tags: tags
   properties: {
     ipConfigurations: [
       {
@@ -29,6 +32,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 resource vm 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   name: vmName
   location: location
+  tags: tags
   properties: {
     hardwareProfile: {
       vmSize: vmSize

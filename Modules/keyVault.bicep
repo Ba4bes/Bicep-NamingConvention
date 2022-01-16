@@ -8,9 +8,12 @@ param enabledForDiskEncryption bool = true
 param tenantId string = subscription().tenantId
 param objectId string
 
+param tags object = {}
+
 resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
   name: keyVaultName
   location: location
+  tags: tags
   properties: {
     enabledForDeployment: enabledForDeployment
     enabledForTemplateDeployment: enabledForTemplateDeployment

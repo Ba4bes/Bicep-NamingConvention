@@ -20,9 +20,12 @@ param kind string
 ])
 param sku string
 
+param tags object = {}
+
 resource storageaccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: storageAccontName
   location: location
+  tags: tags
   kind: kind
   sku: {
     name: sku

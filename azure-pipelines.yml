@@ -1,0 +1,56 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: AzureCLI@2  
+  displayName: 'build bicep artifact' 
+  inputs: 
+    azureSubscription: 'AzureConnection' 
+    scriptType: 'pscore'  
+    scriptLocation: 'inlineScript'  
+    inlineScript: |
+      az bicep build --file main.bicep --outfile ./main.json 
+      
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      $Data = @{
+          TemplatePath     = './main.json'
+          MandatoryTags    = @(
+              'Owner'
+              'CostCenter'
+              'Environment'
+              'DeploymentDate'
+          )
+          TagParameterName = 'tags'
+          TagModuleName    = 'tagging'
+      }
+      $container = New-PesterContainer -Path '.\tests\tags.tests.ps1' -Data $Data
+      $outputFile = ".\TEST-RESULTS.xml"
+      $config = New-PesterConfiguration
+      $config.TestResult.Enabled = $true
+      $config.TestResult.OutputFormat = "NUnitXML"
+      $config.TestResult.OutputPath = $outputFile
+      $config.Output.Verbosity = "Detailed"
+      $config.Run.PassThru = $true
+      $config.Run.Container = $container
+      
+      Invoke-Pester -Configuration $config
+- task: PublishTestResults@2
+  displayName: Publish Test Results
+  condition: always()
+  inputs:
+    testRunTitle: 'Test Results for Pester'
+    buildPlatform: 'Windows'
+    testRunner: 'NUnit'
+    testResultsFiles: "TEST-RESULTS.xml"
+    failTaskOnFailedTests: true
